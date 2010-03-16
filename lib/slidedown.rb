@@ -32,6 +32,7 @@ class SlideDown
   def self.option_parser(source)
     OptionParser.new do |opts|
       opts.on('-h', '--help') { puts USAGE }
+      opts.on('-l', '--local') { @@local_template = true }
       opts.on('-t', '--template TEMPLATE') do |template|
         render(source, template)
       end
@@ -59,12 +60,19 @@ class SlideDown
   end
 
   def read(path)
-    File.read(File.join(File.dirname(__FILE__), '..', "templates", path))
+    if @@local_template
+      File.read(File.join(Dir.pwd, File.dirname(@local_template_name), path))
+    else
+      File.read(File.join(File.dirname(__FILE__), '..', "templates", path))
+    end
   end
 
   def render(name)
     if is_absolute_path?(name)
       template = File.read("#{name}.erb")
+    elsif @@local_template
+      @local_template_name = name
+      template = File.read("#{Dir.pwd}/#{name}.erb")
     else
       directory = File.join(File.dirname(__FILE__), "..", "templates")
       path      = File.join(directory, "#{name}.erb")
